@@ -57,4 +57,21 @@ public class Order {
         delivery.setOrder(this);
     }
 
+    // 핵심 비즈니스 로직
+    // 생성 메서드 (주문 엔티티를 생성할 때 사용한다)
+    public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems) {
+        Order order = new Order();
+        order.setMember(member);
+        order.setDelivery(delivery);
+
+        for (OrderItem orderItem : orderItems) {
+            order.addOrderItem(orderItem);
+        }
+
+        order.setStatus(OrderStatus.ORDER);
+        order.setOrderDate(LocalDateTime.now());
+
+        return order;
+    }
+
 }
