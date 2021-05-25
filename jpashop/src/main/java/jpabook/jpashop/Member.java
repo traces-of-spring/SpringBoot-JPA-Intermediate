@@ -24,5 +24,4 @@ public class Member {
 
     @OneToMany(mappedBy = "member")
     private List<Order> orders = new ArrayList<>(); // 실무에서는 사용하지 않는다 (모든 객체를 동등하게 놓고 보는 것이 좋기 떄문)
-
 }
