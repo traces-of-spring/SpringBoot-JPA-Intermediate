@@ -57,6 +57,18 @@ public class OrderSimpleApiController {
         return new Result(collect);
     }
 
+    @GetMapping("/api/v3/simple-orders")
+    public Result orderV3() {
+        List<Order> orders = orderRepository.findAllWithMemberDelivery();
+
+        List<SimpleOrderDTO> collect = orders.stream()
+                .map(SimpleOrderDTO::new)
+                .collect(Collectors.toList());
+
+        return new Result(collect);
+    }
+
+
     @Data
     @AllArgsConstructor
     static class Result<T> {
