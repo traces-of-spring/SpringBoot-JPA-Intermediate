@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -72,6 +73,24 @@ public class OrderApiController {
     @GetMapping("/api/v3/orders")
     public Result ordersV3() {
         List<Order> orders = orderRepository.findAllWithItem();
+        List<OrderDTO> collect = orders.stream()
+                .map(OrderDTO::new)
+                .collect(Collectors.toList());
+        return new Result(collect);
+    }
+
+    /**
+     * V3.1 엔티티를 조회해서 DTO로 변환 (fetch join 사용 O)
+     * - 1. ToOne 관계를 모두 페치조인한다 (ToOne 관계는 row 수를 증가시키지 않으므로 페이징 쿼리에 영향을 주지 않는다)
+     * - 2. 컬렉션은 지연 로딩으로 조회한다
+     * - 3. 지연 로딩 성능 최적화를 위해 hibernate.default_batch_fetch_size, @BatchSize 를 적용한다
+     * - 이 옵션을 사용하면 컬렉션이나, 프록시 객체를 한꺼번에 설정한 size 만큼이나 IN 쿼리로 조회한다
+     * @param <T>
+     */
+    @GetMapping("/api/v3.1/orders")
+    public Result ordersV3_page(@RequestParam(value = "offset", defaultValue = "0") int offset,
+                                @RequestParam(value = "limit", defaultValue = "100") int limit) {
+        List<Order> orders = orderRepository.findAllWithMemberDelivery(offset, limit);
         List<OrderDTO> collect = orders.stream()
                 .map(OrderDTO::new)
                 .collect(Collectors.toList());
