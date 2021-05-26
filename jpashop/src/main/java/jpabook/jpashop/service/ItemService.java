@@ -20,14 +20,22 @@ public class ItemService {
         itemRepository.save(item);
     }
 
+    /**
+     * 영속성 컨텍스트가 자동 변경
+     * @param itemId
+     * @param name
+     * @param price
+     * @param stockQuantity
+     */
     @Transactional
-    public void updateItem(Long itemId, Book param) {
+    public void updateItem(Long itemId, String name, int price, int stockQuantity) {
         // 영속성 컨텍스트에 의해 관리
         Item findItem = itemRepository.findOne(itemId);
-        // findItem.change(price, name, stockQuantity); --> 업데이트 할 때도 setter 대신 의미 있는 메소드를 만들어 두자
-        findItem.setPrice(param.getPrice());
-        findItem.setName(param.getName());
-        findItem.setStockQuantity(param.getStockQuantity());
+         findItem.changeItem(name, price, stockQuantity);
+        // -> 업데이트 할 때도 setter 대신 의미 있는 메소드를 만들어 두자
+//        findItem.setPrice(price);
+//        findItem.setName(name);
+//        findItem.setStockQuantity(stockQuantity);
     }
 
     public List<Item> findItems() {
