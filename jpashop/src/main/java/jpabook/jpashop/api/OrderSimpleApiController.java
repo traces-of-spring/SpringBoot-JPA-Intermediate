@@ -43,6 +43,11 @@ public class OrderSimpleApiController {
         return all;
     }
 
+    /**
+     * V2. 엔티티를 조회해서 DTO로 변환 (fetch join 사용X)
+     * - 단점 : 지연로딩으로 쿼리 N번 호출
+     * @return
+     */
     @GetMapping("/api/v2/simple-orders")
     public Result orderV2() {
         // ORDER 2개
@@ -57,6 +62,11 @@ public class OrderSimpleApiController {
         return new Result(collect);
     }
 
+    /**
+     * V3. 엔티티를 조회해서 DTO로 변환 (fetch join 사용 O)
+     * - fetch join으로 쿼리 1번 호출
+     * @return
+     */
     @GetMapping("/api/v3/simple-orders")
     public Result orderV3() {
         List<Order> orders = orderRepository.findAllWithMemberDelivery();
@@ -66,6 +76,18 @@ public class OrderSimpleApiController {
                 .collect(Collectors.toList());
 
         return new Result(collect);
+    }
+
+    /**
+     * V4. JPA에서 DTO로 바로 조회
+     * - 쿼리 1번 호출
+     * - select 절에서 원하는 데이터만 선택해서 조회
+     * - 재사용성이 낮다는 단점
+     * @return
+     */
+    @GetMapping("/api/v4/simple-orders")
+    public Result orderV4() {
+        return new Result(orderRepository.findOrderDtos());
     }
 
 
