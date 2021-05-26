@@ -1,13 +1,19 @@
 package jpabook.jpashop.api;
 
+import jpabook.jpashop.domain.Address;
 import jpabook.jpashop.domain.Order;
+import jpabook.jpashop.domain.OrderStatus;
 import jpabook.jpashop.repository.OrderRepository;
 import jpabook.jpashop.repository.OrderSearch;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * XToOne(ManyToOne, OneToOne) 에서는 어떻게 성능 최적화를 할까?
@@ -35,5 +41,42 @@ public class OrderSimpleApiController {
             order.getDelivery().getAddress(); // LAZY 강제 초기화
         }
         return all;
+    }
+
+    @GetMapping("/api/v2/simple-orders")
+    public Result orderV2() {
+        // ORDER 2개
+        // N + 1 -> 1 + 회원 N + 배송 N
+        List<Order> orders = orderRepository.findAll(new OrderSearch());
+
+        //
+        List<SimpleOrderDTO> collect = orders.stream()
+                .map(SimpleOrderDTO::new)
+                .collect(Collectors.toList());
+
+        return new Result(collect);
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class Result<T> {
+        private T data;
+    }
+
+    @Data
+    static class SimpleOrderDTO {
+        private Long orderId;
+        private String name;
+        private LocalDateTime orderDate;
+        private OrderStatus orderStatus;
+        private Address address;
+
+        public SimpleOrderDTO(Order order) {
+            orderId = order.getId();
+            name = order.getMember().getName(); // LAZY 초기화 (영속성 컨텍스트가 DB 쿼리)
+            orderDate = order.getOrderDate();
+            orderStatus = order.getStatus();
+            address = order.getDelivery().getAddress(); // LAZY 초기화 (영속성 컨텍스트가 DB 쿼리)
+        }
     }
 }
