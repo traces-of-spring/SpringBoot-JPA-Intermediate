@@ -2,6 +2,7 @@ package jpabook.jpashop.api;
 
 import jpabook.jpashop.domain.Address;
 import jpabook.jpashop.domain.Order;
+import jpabook.jpashop.domain.OrderItem;
 import jpabook.jpashop.domain.OrderStatus;
 import jpabook.jpashop.repository.OrderRepository;
 import jpabook.jpashop.repository.OrderSearch;
@@ -9,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -69,10 +71,27 @@ public class OrderSimpleApiController {
      */
     @GetMapping("/api/v3/simple-orders")
     public Result orderV3() {
-        List<Order> orders = orderRepository.findAllWithMemberDelivery();
+        List<Order> orders = orderRepository.findAllWithItem();
 
         List<SimpleOrderDTO> collect = orders.stream()
                 .map(SimpleOrderDTO::new)
+                .collect(Collectors.toList());
+
+        return new Result(collect);
+    }
+
+    /**
+     * V3. 엔티티를 조회해서 DTO로 변환 (fetch join 사용 O)
+     * - fetch join으로 쿼리 1번 호출
+     * @return
+     */
+    @GetMapping("/api/v3.1/simple-orders")
+    public Result orderV3_page(@RequestParam(value = "offset", defaultValue = "0") int offset,
+                               @RequestParam(value = "limit", defaultValue = "100")int limit) {
+        List<Order> orders = orderRepository.findAllWithMemberDelivery(offset, limit);
+
+        List<OrderDTO> collect = orders.stream()
+                .map(OrderDTO::new)
                 .collect(Collectors.toList());
 
         return new Result(collect);
@@ -95,6 +114,38 @@ public class OrderSimpleApiController {
     @AllArgsConstructor
     static class Result<T> {
         private T data;
+    }
+
+    @Data
+    static class OrderDTO {
+        private Long orderId;
+        private String name;
+        private LocalDateTime orderDate;
+        private OrderStatus orderStatus;
+        private Address address;
+        private List<OrderItemDTO> orderItems;
+
+        public OrderDTO(Order order) {
+            orderId = order.getId();
+            name = order.getMember().getName(); // LAZY 초기화 (영속성 컨텍스트가 DB 쿼리)
+            orderDate = order.getOrderDate();
+            orderStatus = order.getStatus();
+            address = order.getDelivery().getAddress(); // LAZY 초기화 (영속성 컨텍스트가 DB 쿼리)
+            orderItems = order.getOrderItems().stream().map(orderItem -> new OrderItemDTO(orderItem)).collect(Collectors.toList());
+        }
+    }
+
+    @Data
+    static class OrderItemDTO {
+        private String itemName;
+        private int orderPrice;
+        private int count;
+
+        public OrderItemDTO(OrderItem orderItem) {
+            itemName = orderItem.getItem().getName();
+            orderPrice = orderItem.getOrderPrice();
+            count = orderItem.getCount();
+        }
     }
 
     @Data
