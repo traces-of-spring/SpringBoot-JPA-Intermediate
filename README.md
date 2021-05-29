@@ -1,1 +1,1 @@
-# SpringBoot-JPA-Intermediate-1
+# SpringBoot-JPA-Intermediate
